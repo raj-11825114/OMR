@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OMR Sheet</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #eef2f7;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1000px;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+h2 {
+    text-align: center;
+}
+
+.section {
+    margin-top: 25px;
+}
+
+.section h3 {
+    background: #333;
+    color: white;
+    padding: 8px;
+    border-radius: 5px;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    margin: 6px 0;
+}
+
+.qno {
+    width: 50px;
+    font-weight: bold;
+}
+
+.options {
+    display: flex;
+    gap: 12px;
+}
+
+input[type="radio"] {
+    display: none;
+}
+
+.circle {
+    width: 26px;
+    height: 26px;
+    border: 2px solid black;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+input[type="radio"]:checked + .circle {
+    background: black;
+    color: white;
+}
+
+button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background: green;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.result {
+    margin-top: 20px;
+    background: #f4f4f4;
+    padding: 10px;
+    border-radius: 5px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>OMR Answer Sheet</h2>
+
+    <div style="margin-bottom: 15px;">
+        <input type="text" id="chapter" placeholder="Enter Chapter Number"
+        style="padding:8px; width: 100%; border-radius:5px; border:1px solid #ccc;">
+    </div>
+
+    <form id="form"></form>
+
+    <button type="button" onclick="submitOMR()">Submit</button>
+
+    <div class="result" id="result"></div>
+</div>
+
+<script>
+const form = document.getElementById("form");
+
+// Create Section (with reset numbering)
+function createSection(title, count, prefix) {
+    let section = document.createElement("div");
+    section.className = "section";
+
+    let heading = document.createElement("h3");
+    heading.innerText = title;
+    section.appendChild(heading);
+
+    for (let i = 1; i <= count; i++) {
+
+        let row = document.createElement("div");
+        row.className = "row";
+
+        let qno = document.createElement("div");
+        qno.className = "qno";
+        qno.innerText = "Q" + i;
+
+        let options = document.createElement("div");
+        options.className = "options";
+
+        ["A","B","C","D"].forEach(opt => {
+            let label = document.createElement("label");
+
+            let input = document.createElement("input");
+            input.type = "radio";
+            input.name = prefix + "_q" + i;
+            input.value = opt;
+
+            let circle = document.createElement("div");
+            circle.className = "circle";
+            circle.innerText = opt;
+
+            label.appendChild(input);
+            label.appendChild(circle);
+            options.appendChild(label);
+        });
+
+        row.appendChild(qno);
+        row.appendChild(options);
+        section.appendChild(row);
+    }
+
+    form.appendChild(section);
+}
+
+// Create Sections
+createSection("Section A", 20, "A");
+createSection("Section B", 60, "B");
+createSection("Section C", 20, "C");
+
+// Submit Function
+function submitOMR() {
+
+    let chapter = document.getElementById("chapter").value.trim();
+
+    if (!chapter) {
+        alert("Please enter Chapter Number!");
+        return;
+    }
+
+    let answers = {
+        sectionA: [],
+        sectionB: [],
+        sectionC: []
+    };
+
+    // Section A
+    for (let i = 1; i <= 20; i++) {
+        let selected = document.querySelector(`input[name="A_q${i}"]:checked`);
+        answers.sectionA.push(selected ? selected.value : "Not Answered");
+    }
+
+    // Section B
+    for (let i = 1; i <= 60; i++) {
+        let selected = document.querySelector(`input[name="B_q${i}"]:checked`);
+        answers.sectionB.push(selected ? selected.value : "Not Answered");
+    }
+
+    // Section C
+    for (let i = 1; i <= 20; i++) {
+        let selected = document.querySelector(`input[name="C_q${i}"]:checked`);
+        answers.sectionC.push(selected ? selected.value : "Not Answered");
+    }
+
+    // Show Result
+    document.getElementById("result").innerHTML =
+        "<h3>Responses:</h3><pre>" +
+        JSON.stringify({ chapter, ...answers }, null, 2) +
+        "</pre>";
+
+    sendToGoogleSheet(chapter, answers);
+}
+
+// Send to Google Sheets
+function sendToGoogleSheet(chapter, answers) {
+    fetch("https://script.google.com/macros/s/AKfycbwjNSRnaWVQE-R2u3O6gb_QzrmeGsQivBnu_amsigpq06b7j1gPa0yRIVXSDrNLbC4vQw/exec", {
+        method: "POST",
+        body: JSON.stringify({ chapter: chapter, answers: answers })
+    })
+    .then(() => {
+        alert("Submitted Successfully!");
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Submission failed!");
+    });
+}
+</script>
+
+</body>
+</html>
