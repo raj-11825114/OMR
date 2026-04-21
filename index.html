@@ -206,7 +206,7 @@ function submitOMR() {
 
 // Send to Google Sheets
 function sendToGoogleSheet(chapter, answers) {
-    fetch("https://script.google.com/macros/s/AKfycbwjNSRnaWVQE-R2u3O6gb_QzrmeGsQivBnu_amsigpq06b7j1gPa0yRIVXSDrNLbC4vQw/exec", {
+    fetch("https://script.google.com/macros/s/AKfycbxqEvo2nNgi9SR3dOxShBO43nB7ZNY3DmITdUXbhRkKAuXqiHjK3q_e1cFdGl4wFw4Z5g/exec", {
         method: "POST",
         body: JSON.stringify({ chapter: chapter, answers: answers })
     })
